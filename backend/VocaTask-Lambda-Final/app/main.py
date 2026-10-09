@@ -1,6 +1,5 @@
 import logging
 from fastapi import FastAPI
-from mangum import Mangum
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api import tasks
@@ -49,5 +48,3 @@ async def root():
         "docs": "/docs",
         "health": "/health"
     }
-
-handler = Mangum(app)
