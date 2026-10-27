@@ -192,6 +192,11 @@ class LLMService:
         conversation_history: list | None = None,
         evidence: dict | None = None,
         target_language: str = "en",
+        action: str | None = None,
+        code_snippet: str | None = None,
+        filename: str | None = None,
+        build_tool: str | None = None,
+        error_message: str | None = None,
     ) -> dict | None:
         """
         Dynamically diagnoses ANY arbitrary uncatalogued frontend error using available LLMs.
@@ -201,30 +206,72 @@ class LLMService:
             return None
 
         framework = evidence.get("detectedFramework", "Frontend JavaScript") if evidence else "Frontend JavaScript"
+        fw_version = evidence.get("frameworkVersion") if evidence else None
+        if fw_version and fw_version not in str(framework):
+            framework = f"{framework} (version {fw_version})"
+
+        b_tool = build_tool or (evidence.get("buildTool") if evidence else None)
+        c_snippet = code_snippet or (evidence.get("codeSnippet") if evidence else None)
+        e_msg = error_message or (evidence.get("errorMessage") if evidence else None)
+        f_name = filename or (evidence.get("filename") if evidence else None)
+
         file_loc = "Not specified"
         if evidence and evidence.get("fileLocation"):
             f = evidence["fileLocation"].get("file", "")
             ln = evidence["fileLocation"].get("line", "")
             file_loc = f"{f}:{ln}" if ln else f
+        elif f_name:
+            file_loc = f_name
 
         system_instruction = MASTER_SYSTEM_PROMPT.format(target_language=target_language)
+
+        context_details = []
+        if framework:
+            context_details.append(f"Detected Framework: {framework}")
+        if b_tool:
+            context_details.append(f"Build Tool / Bundler: {b_tool}")
+        if file_loc:
+            context_details.append(f"File Location / Name: {file_loc}")
+        if e_msg:
+            context_details.append(f"Exact Error Message:\n{e_msg}")
+        if c_snippet:
+            context_details.append(f"Component Code Snippet:\n```\n{c_snippet}\n```")
+
+        context_str = "\n".join(context_details)
+
+        skip_guidance = ""
+        if action == "skip_questions":
+            skip_guidance = (
+                "\nSPECIAL INSTRUCTION: The user selected 'Skip questions & show best guess'.\n"
+                "Provide an intelligent preliminary diagnosis based on the available context.\n"
+                "- Explicitly list any reasonable assumptions made in the 'assumptions' array.\n"
+                "- Provide safe, non-destructive troubleshooting steps in 'fix_steps'.\n"
+                "- Explain what missing information would confirm the root cause in 'missing_information'.\n"
+            )
 
         prompt = (
             f"{system_instruction}\n\n"
             "TASK INSTRUCTIONS:\n"
             "A developer encountered a real frontend runtime error, exception, or UI issue.\n"
             "Analyze the error query, stack trace, and context, then return a comprehensive fix in JSON format.\n"
-            f"Detected Framework/Runtime: {framework}\n"
-            f"Detected File Location: {file_loc}\n\n"
+            f"{context_str}\n"
+            f"{skip_guidance}\n"
             "JSON SCHEMA REQUIREMENT:\n"
             "{\n"
             '  "category": "High-level Category (e.g. React 19 Runtime, Vite ESM Module, Network/CORS, CSS Stacking, Web Audio API)",\n'
             '  "title": "Clear, informative title for the specific error",\n'
             '  "problem": "Precise 1-2 sentence description of what failed and why",\n'
             '  "likely_cause": "Detailed technical root cause analysis based on the error output",\n'
+            '  "why_it_occurs": "In-depth explanation of the underlying mechanism causing this error",\n'
             '  "fix_steps": ["1. First actionable step", "2. Second actionable step", "3. Third actionable step"],\n'
             '  "code_before": "// Offending code or typical broken pattern",\n'
             '  "code_after": "// Exact corrected code solution",\n'
+            '  "commands": ["terminal commands if needed, e.g. npm install package"],\n'
+            '  "verification_steps": ["Step to verify the issue is resolved in browser or tests"],\n'
+            '  "alternative_causes": ["Other potential reasons if the main fix does not solve it"],\n'
+            '  "assumptions": ["Assumptions made if information was omitted or skipped"],\n'
+            '  "missing_information": ["Key details that would make this diagnosis even more exact"],\n'
+            '  "confidence_level": "e.g. 95% High Confidence or 75% Preliminary Best Guess",\n'
             '  "extra_tips": "Performance, security, or framework best practices to avoid recurrence",\n'
             '  "prevention_checklist": ["Precaution 1", "Precaution 2", "Precaution 3"],\n'
             '  "source_title": "Official Documentation or MDN",\n'

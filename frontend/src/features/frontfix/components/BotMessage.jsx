@@ -38,6 +38,15 @@ export default function BotMessage({
   onVerifySolution,
   onGoBack,
   onRestart,
+  diagnosticState,
+  onUpdateDiagnosticState,
+  onSetActiveQuestion,
+  onSubmitDiagnosticQuestion,
+  restartConfirming,
+  onRequestRestart,
+  onCancelRestart,
+  onConfirmRestart,
+  isSending,
 }) {
   if (data.conversational) {
     return (
@@ -54,7 +63,17 @@ export default function BotMessage({
               onSelectOption={onSelectOption}
               onSkip={onSkipQuestions}
               onGoBack={onGoBack}
-              onRestart={onRestart}
+              onRestart={onRequestRestart || onRestart}
+              diagnosticState={diagnosticState}
+              onUpdateDiagnosticState={onUpdateDiagnosticState}
+              activeQuestion={diagnosticState?.activeQuestion}
+              onSetActiveQuestion={onSetActiveQuestion}
+              onSubmitDiagnosticQuestion={onSubmitDiagnosticQuestion}
+              restartConfirming={restartConfirming}
+              onRequestRestart={onRequestRestart}
+              onCancelRestart={onCancelRestart}
+              onConfirmRestart={onConfirmRestart}
+              isSending={isSending}
             />
           )}
           {Array.isArray(data.verification_actions) && data.verification_actions.length > 0 && (
@@ -118,7 +137,17 @@ export default function BotMessage({
               onSelectOption={onSelectOption}
               onSkip={onSkipQuestions}
               onGoBack={onGoBack}
-              onRestart={onRestart}
+              onRestart={onRequestRestart || onRestart}
+              diagnosticState={diagnosticState}
+              onUpdateDiagnosticState={onUpdateDiagnosticState}
+              activeQuestion={diagnosticState?.activeQuestion}
+              onSetActiveQuestion={onSetActiveQuestion}
+              onSubmitDiagnosticQuestion={onSubmitDiagnosticQuestion}
+              restartConfirming={restartConfirming}
+              onRequestRestart={onRequestRestart}
+              onCancelRestart={onCancelRestart}
+              onConfirmRestart={onConfirmRestart}
+              isSending={isSending}
             />
           )}
 
@@ -191,6 +220,11 @@ export default function BotMessage({
       {badgeInfo && (
         <span className={`state-badge ${badgeInfo.className}`}>{badgeInfo.label}</span>
       )}
+      {data.confidence_level && (
+        <span className="confidence-pill" title={`Confidence: ${data.confidence_level}`}>
+          🎯 {data.confidence_level}
+        </span>
+      )}
       <span className="provenance-tag ai-gen">✨ Verified Frontend Diagnostic</span>
     </div>
   );
@@ -212,6 +246,28 @@ export default function BotMessage({
       <div className="section-content">{data.likely_cause || ''}</div>
     </div>
   );
+
+  if (data.why_it_occurs) {
+    rows.push(
+      <div className="section-block">
+        <div className="section-label">🧠 Why This Occurs</div>
+        <div className="section-content" style={{ whiteSpace: 'pre-line' }}>{data.why_it_occurs}</div>
+      </div>
+    );
+  }
+
+  if (Array.isArray(data.assumptions) && data.assumptions.length > 0) {
+    rows.push(
+      <div className="assumptions-card">
+        <div className="assumptions-header">📋 Diagnostic Assumptions (Best Guess)</div>
+        <ul className="assumptions-list">
+          {data.assumptions.map((item, idx) => (
+            <li key={idx}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   if (Array.isArray(data.fix_steps) && data.fix_steps.length > 0) {
     rows.push(
@@ -238,6 +294,76 @@ export default function BotMessage({
         after={data.code_after}
         onCopy={onToast}
       />
+    );
+  }
+
+  if (Array.isArray(data.commands) && data.commands.length > 0) {
+    rows.push(
+      <div className="section-block commands-block">
+        <div className="section-label">💻 Terminal Commands</div>
+        <div className="commands-list">
+          {data.commands.map((cmd, idx) => (
+            <div key={idx} className="command-terminal-item">
+              <code className="command-code">{cmd}</code>
+              <button
+                className="copy-cmd-btn"
+                type="button"
+                onClick={() => {
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(cmd);
+                    onToast?.('Command copied to clipboard!');
+                  }
+                }}
+                title="Copy command"
+              >
+                Copy
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (Array.isArray(data.verification_steps) && data.verification_steps.length > 0) {
+    rows.push(
+      <div className="section-block">
+        <div className="section-label">🧪 How to Verify the Fix</div>
+        <div className="verification-steps-list">
+          {data.verification_steps.map((vstep, idx) => (
+            <div key={idx} className="verification-step-item">
+              <span className="vstep-check">✓</span>
+              <span>{typeof vstep === 'string' ? vstep.replace(/^\d+\.\s*/, '') : vstep}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (Array.isArray(data.alternative_causes) && data.alternative_causes.length > 0) {
+    rows.push(
+      <div className="section-block alternative-causes-block">
+        <div className="section-label">🔄 If This Doesn't Fix It (Alternative Causes)</div>
+        <ul className="alternative-causes-list">
+          {data.alternative_causes.map((cause, idx) => (
+            <li key={idx}>{cause}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  if (Array.isArray(data.missing_information) && data.missing_information.length > 0) {
+    rows.push(
+      <div className="missing-info-card">
+        <div className="missing-info-header">ℹ️ For a more exact diagnosis, you can provide:</div>
+        <ul className="missing-info-list">
+          {data.missing_information.map((item, idx) => (
+            <li key={idx}>{item}</li>
+          ))}
+        </ul>
+      </div>
     );
   }
 

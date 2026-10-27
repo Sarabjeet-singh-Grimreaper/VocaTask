@@ -104,6 +104,13 @@ def format_diagnostic_response(diagnosis: dict | None) -> dict | None:
         "verification_actions": diagnosis.get("verification_actions", []),
         "case_summary": diagnosis.get("case_summary"),
         "language": diagnosis.get("language"),
+        "why_it_occurs": diagnosis.get("why_it_occurs"),
+        "commands": diagnosis.get("commands", []),
+        "verification_steps": diagnosis.get("verification_steps", []),
+        "alternative_causes": diagnosis.get("alternative_causes", []),
+        "assumptions": diagnosis.get("assumptions", []),
+        "missing_information": diagnosis.get("missing_information", []),
+        "confidence_level": diagnosis.get("confidence_level"),
     })
 
     return res

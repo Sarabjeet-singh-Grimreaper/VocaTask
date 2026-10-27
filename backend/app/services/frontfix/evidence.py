@@ -25,16 +25,35 @@ class EvidenceService:
             context = {}
 
         error_message = context.get("errorMessage", "")
+        code_snippet = context.get("codeSnippet", "")
+        filename = context.get("filename", "")
+        build_tool = context.get("buildTool", "")
+        additional_context = context.get("additionalContext", "")
         stack = context.get("stack", "")
         selected_text = context.get("selectedText", "")
-        text = f"{raw_input or ''}\n{error_message or ''}\n{stack or ''}\n{selected_text or ''}"
-        clean_stack = (stack or raw_input or "").strip()
+        text = f"{raw_input or ''}\n{error_message or ''}\n{code_snippet or ''}\n{stack or ''}\n{selected_text or ''}\n{additional_context or ''}"
+        clean_stack = (stack or error_message or raw_input or "").strip()
 
         # 1. Stack trace / file & line number detection
         file_location = cls.extract_file_location(clean_stack)
+        if not file_location and filename:
+            file_location = {"file": filename, "line": None, "column": None}
 
         # 2. Framework detection from evidence
-        detected_framework = cls.detect_framework(text, context.get("detectedFramework"))
+        framework_raw = context.get("framework") or context.get("detectedFramework")
+        fw_override = None
+        fw_version = None
+        if isinstance(framework_raw, dict):
+            fw_override = framework_raw.get("name")
+            fw_version = framework_raw.get("version")
+        elif isinstance(framework_raw, str):
+            fw_override = framework_raw
+
+        detected_framework = cls.detect_framework(text, fw_override)
+        if fw_version and detected_framework:
+            detected_framework_label = f"{detected_framework} (v{fw_version})"
+        else:
+            detected_framework_label = detected_framework
 
         # 3. Error classification
         error_classification = cls.classify_error(text)
@@ -55,6 +74,13 @@ class EvidenceService:
             first_line = raw_input.strip().split("\n")[0]
             observations.append(f'User Query: "{first_line[:100]}"')
 
+        if code_snippet:
+            fn_part = f" ({filename})" if filename else ""
+            observations.append(f"Component Code Snippet Provided{fn_part} ({len(code_snippet)} chars)")
+
+        if build_tool:
+            observations.append(f"Build Tool / Bundler: {build_tool}")
+
         if file_location:
             line_str = f" line {file_location['line']}" if file_location.get("line") else ""
             col_str = f":{file_location['column']}" if file_location.get("column") else ""
@@ -63,7 +89,10 @@ class EvidenceService:
             observations.append("No stack trace provided; file and line number are unspecified")
 
         if detected_framework and detected_framework != "Unknown / Generic JavaScript":
-            observations.append(f"Framework Identified from Evidence: {detected_framework}")
+            fw_obs = f"Framework Identified: {detected_framework}"
+            if fw_version:
+                fw_obs += f" (Version: {fw_version})"
+            observations.append(fw_obs)
         else:
             observations.append("Framework not specified in input (diagnosing as standard JavaScript / Web platform)")
 
@@ -85,6 +114,12 @@ class EvidenceService:
         return {
             "fileLocation": file_location,
             "detectedFramework": detected_framework or "Unknown / Generic JavaScript",
+            "detected_framework": detected_framework or "Unknown / Generic JavaScript",
+            "frameworkVersion": fw_version,
+            "buildTool": build_tool,
+            "errorMessage": error_message,
+            "codeSnippet": code_snippet,
+            "filename": filename,
             "errorClassification": error_classification,
             "inputSource": input_source,
             "isBrowserCaptured": is_browser_captured,

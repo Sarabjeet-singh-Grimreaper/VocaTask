@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BACKEND_URL } from '../config.js';
 import { PRESET_SAMPLES } from '../data/presets.js';
 import { sanitizeClientSide } from '../utils/sanitize.js';
@@ -52,6 +52,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let idCounter = 0;
 const nextId = () => `m-${Date.now()}-${idCounter++}`;
 
+export const initialDiagnosticState = {
+  category: '',
+  problemDescription: '',
+  errorMessage: '',
+  framework: { name: 'React', version: '19' },
+  buildTool: 'Vite',
+  codeSnippet: '',
+  filename: '',
+  codeLanguage: 'javascript',
+  additionalContext: '',
+  activeQuestion: null, // null | 'error' | 'framework' | 'code'
+};
+
 export default function useChat({ online, showToast, onReset }) {
   const [messages, setMessages] = useState([]);
   const [typingStatuses, setTypingStatuses] = useState(null);
@@ -70,6 +83,21 @@ export default function useChat({ online, showToast, onReset }) {
   const apiProblemRef = useRef('');
   const [websiteFlow, setWebsiteFlow] = useState(null);
   const websiteAnswersRef = useRef([]);
+
+  // Persistent Intelligent Diagnostic State
+  const [diagnosticState, setDiagnosticState] = useState(initialDiagnosticState);
+  const diagnosticStateRef = useRef(diagnosticState);
+  useEffect(() => {
+    diagnosticStateRef.current = diagnosticState;
+  }, [diagnosticState]);
+
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  const [historyStack, setHistoryStack] = useState([]);
+  const [restartConfirming, setRestartConfirming] = useState(false);
 
   // Sent to the backend with each query; a ref because it doesn't affect rendering.
   const historyRef = useRef([]);
@@ -224,6 +252,17 @@ export default function useChat({ online, showToast, onReset }) {
         setWebsiteFlow(null);
       }
 
+      setHistoryStack((prev) => [
+        ...prev,
+        {
+          messages: [...messagesRef.current],
+          diagnosticState: { ...diagnosticStateRef.current },
+          currentState,
+          caseSummary,
+          history: [...historyRef.current],
+        },
+      ]);
+
       addMessage({ type: 'user', text: query });
       historyRef.current.push({ role: 'user', content: query });
       addHistoryEntry(query.split('\n')[0], query);
@@ -262,6 +301,15 @@ export default function useChat({ online, showToast, onReset }) {
                 case_summary: caseSummary,
                 language: language,
                 action: options.action || null,
+                errorMessage: options.errorMessage !== undefined ? options.errorMessage : diagnosticStateRef.current.errorMessage,
+                framework: options.framework !== undefined ? options.framework : diagnosticStateRef.current.framework,
+                buildTool: options.buildTool !== undefined ? options.buildTool : diagnosticStateRef.current.buildTool,
+                codeSnippet: options.codeSnippet !== undefined ? options.codeSnippet : diagnosticStateRef.current.codeSnippet,
+                filename: options.filename !== undefined ? options.filename : diagnosticStateRef.current.filename,
+                codeLanguage: options.codeLanguage !== undefined ? options.codeLanguage : diagnosticStateRef.current.codeLanguage,
+                additionalContext: options.additionalContext !== undefined ? options.additionalContext : diagnosticStateRef.current.additionalContext,
+                category: options.category !== undefined ? options.category : diagnosticStateRef.current.category,
+                problemDescription: options.problemDescription !== undefined ? options.problemDescription : diagnosticStateRef.current.problemDescription,
               }),
             });
             if (res.ok) {
@@ -305,11 +353,59 @@ export default function useChat({ online, showToast, onReset }) {
     ]
   );
 
-  const selectOption = useCallback(
-    (optionText) => {
-      send(optionText);
+  const updateDiagnosticState = useCallback((updates) => {
+    setDiagnosticState((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const setActiveQuestion = useCallback((questionType) => {
+    setDiagnosticState((prev) => ({ ...prev, activeQuestion: questionType }));
+  }, []);
+
+  const submitDiagnosticQuestion = useCallback(
+    (type, values) => {
+      const merged = { ...diagnosticStateRef.current, ...values, activeQuestion: null };
+      setDiagnosticState(merged);
+
+      let summaryText = '';
+      if (type === 'error') {
+        summaryText = `Pasted exact error message:\n${values.errorMessage}`;
+      } else if (type === 'framework') {
+        const fwName = values.framework?.name || 'React';
+        const fwVer = values.framework?.version ? ` (v${values.framework.version})` : '';
+        const bt = values.buildTool ? ` · Build tool: ${values.buildTool}` : '';
+        summaryText = `Specified framework: ${fwName}${fwVer}${bt}`;
+      } else if (type === 'code') {
+        const fileLabel = values.filename ? ` (${values.filename})` : '';
+        const lang = values.codeLanguage || 'javascript';
+        summaryText = `Shared component code${fileLabel}:\n\`\`\`${lang}\n${values.codeSnippet}\n\`\`\``;
+      }
+
+      send(summaryText || 'Diagnostic details provided', {
+        ...values,
+        errorMessage: values.errorMessage !== undefined ? values.errorMessage : merged.errorMessage,
+        framework: values.framework !== undefined ? values.framework : merged.framework,
+        buildTool: values.buildTool !== undefined ? values.buildTool : merged.buildTool,
+        codeSnippet: values.codeSnippet !== undefined ? values.codeSnippet : merged.codeSnippet,
+        filename: values.filename !== undefined ? values.filename : merged.filename,
+        codeLanguage: values.codeLanguage !== undefined ? values.codeLanguage : merged.codeLanguage,
+        additionalContext: values.additionalContext !== undefined ? values.additionalContext : merged.additionalContext,
+      });
     },
     [send]
+  );
+
+  const selectOption = useCallback(
+    (optionText) => {
+      if (currentState === 'UNDERSTAND_PROBLEM') {
+        setDiagnosticState((prev) => ({
+          ...prev,
+          category: optionText,
+          problemDescription: prev.problemDescription || optionText,
+        }));
+      }
+      send(optionText);
+    },
+    [currentState, send]
   );
 
   const skipQuestions = useCallback(() => {
@@ -349,19 +445,30 @@ export default function useChat({ online, showToast, onReset }) {
   );
 
   const goBack = useCallback(() => {
-    setMessages((prev) => {
-      if (prev.length <= 2) return prev;
-      return prev.slice(0, -2);
-    });
-    if (historyRef.current.length >= 2) {
-      historyRef.current = historyRef.current.slice(0, -2);
+    if (historyStack.length > 0) {
+      const lastSnapshot = historyStack[historyStack.length - 1];
+      setHistoryStack((prev) => prev.slice(0, -1));
+      setMessages(lastSnapshot.messages);
+      setDiagnosticState(lastSnapshot.diagnosticState);
+      setCurrentState(lastSnapshot.currentState);
+      setCaseSummary(lastSnapshot.caseSummary);
+      historyRef.current = lastSnapshot.history;
+      showToast?.('Reverted to previous step with preserved answers.');
+    } else {
+      setMessages((prev) => {
+        if (prev.length <= 2) return prev;
+        return prev.slice(0, -2);
+      });
+      if (historyRef.current.length >= 2) {
+        historyRef.current = historyRef.current.slice(0, -2);
+      }
+      setApiFlow(null);
+      apiProblemRef.current = '';
+      setWebsiteFlow(null);
+      websiteAnswersRef.current = [];
+      showToast?.('Reverted to previous step.');
     }
-    setApiFlow(null);
-    apiProblemRef.current = '';
-    setWebsiteFlow(null);
-    websiteAnswersRef.current = [];
-    showToast?.('Reverted to previous step.');
-  }, [showToast]);
+  }, [historyStack, showToast]);
 
   const newChat = useCallback(() => {
     setMessages([]);
@@ -375,13 +482,29 @@ export default function useChat({ online, showToast, onReset }) {
     websiteAnswersRef.current = [];
     historyRef.current = [];
     setActiveSessionId(null);
+    setDiagnosticState(initialDiagnosticState);
+    setHistoryStack([]);
+    setRestartConfirming(false);
     onReset?.();
     showToast?.('New support session started');
   }, [onReset, showToast]);
 
-  const restartDiagnosis = useCallback(() => {
+  const requestRestart = useCallback(() => {
+    setRestartConfirming(true);
+  }, []);
+
+  const cancelRestart = useCallback(() => {
+    setRestartConfirming(false);
+  }, []);
+
+  const confirmRestart = useCallback(() => {
+    setRestartConfirming(false);
     newChat();
   }, [newChat]);
+
+  const restartDiagnosis = useCallback(() => {
+    requestRestart();
+  }, [requestRestart]);
 
   function sendPreset(key) {
     send(PRESET_SAMPLES[key] || key);
@@ -437,6 +560,14 @@ export default function useChat({ online, showToast, onReset }) {
     verifySolution,
     goBack,
     restartDiagnosis,
+    diagnosticState,
+    updateDiagnosticState,
+    setActiveQuestion,
+    submitDiagnosticQuestion,
+    restartConfirming,
+    requestRestart,
+    cancelRestart,
+    confirmRestart,
     send,
     sendPreset,
     upload,

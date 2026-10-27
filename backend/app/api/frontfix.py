@@ -96,6 +96,26 @@ async def _handle_diagnose(request: Request):
 
     query = body.get("query")
     action = body.get("action")
+    error_message = body.get("errorMessage")
+    code_snippet = body.get("codeSnippet")
+    filename = body.get("filename")
+    build_tool = body.get("buildTool")
+    code_language = body.get("codeLanguage")
+    additional_context = body.get("additionalContext")
+    category = body.get("category")
+    problem_description = body.get("problemDescription")
+
+    if not query:
+        if action:
+            query = action
+        elif error_message:
+            query = f"Error details:\n{error_message}"
+        elif code_snippet:
+            fn_label = f" ({filename})" if filename else ""
+            query = f"Code snippet{fn_label}:\n{code_snippet}"
+        elif problem_description:
+            query = problem_description
+
     if (not query or not isinstance(query, str) or not query.strip()) and not action:
         return JSONResponse(status_code=400, content={"detail": "Query cannot be empty."})
     if not query:
@@ -117,9 +137,18 @@ async def _handle_diagnose(request: Request):
     language = body.get("language")
 
     context = {
-        "stack": stack,
+        "stack": stack or error_message or "",
         "detectedFramework": framework,
+        "framework": framework,
+        "buildTool": build_tool,
         "source": source,
+        "errorMessage": error_message,
+        "codeSnippet": code_snippet,
+        "filename": filename,
+        "codeLanguage": code_language,
+        "additionalContext": additional_context,
+        "category": category,
+        "problemDescription": problem_description,
     }
 
     diagnosis = await engine.diagnose(

@@ -1869,3 +1869,583 @@
   flex-direction: column;
   gap: 12px;
 }
+
+
+/* =========================================================
+   INTELLIGENT DIAGNOSTIC SYSTEM - EXPANDED STYLES
+   ========================================================= */
+
+/* Active & Saved State Chips */
+.interactive-option-chip.chip-active {
+  background: #f0fdf4;
+  border-color: #16a34a;
+  color: #15803d;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+  font-weight: 600;
+}
+
+.interactive-option-chip.chip-saved {
+  background: #f8fafc;
+  border-color: #0284c7;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.interactive-option-chip.chip-saved .chip-bullet {
+  color: #0284c7;
+}
+
+.chip-edit-hint {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+/* Inline Diagnostic Panels (Question A, B, C) */
+.diagnostic-inline-panel {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeInPanel 0.2s ease-out;
+}
+
+@keyframes fadeInPanel {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diagnostic-inline-panel.error-panel {
+  border-color: #fca5a5;
+  background: #fffafa;
+}
+
+.diagnostic-inline-panel.framework-panel {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.diagnostic-inline-panel.code-panel {
+  border-color: #c4b5fd;
+  background: #fbfaff;
+}
+
+/* DevTools Guide Banner */
+.devtools-guide-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #991b1b;
+  line-height: 1.45;
+}
+
+.devtools-guide-banner kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #450a0a;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.guide-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Labels & Text Inputs */
+.diagnostic-input-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.diagnostic-sublabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.required-star {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.diagnostic-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #0f172a;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 90px;
+  font-family: var(--font-family);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.diagnostic-textarea:focus,
+.diagnostic-code-textarea:focus,
+.diagnostic-text-input:focus,
+.diagnostic-select-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.diagnostic-code-textarea {
+  width: 100%;
+  padding: 12px;
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+  resize: vertical;
+  min-height: 140px;
+}
+
+.diagnostic-input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.diagnostic-char-counter {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.diagnostic-char-counter.counter-danger {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.diagnostic-validation-error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Panel Action Buttons */
+.diagnostic-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.diagnostic-submit-btn {
+  background: #15803d;
+  color: #ffffff;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.diagnostic-submit-btn:hover:not(:disabled) {
+  background: #166534;
+  transform: translateY(-1px);
+}
+
+.diagnostic-submit-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.diagnostic-clear-btn {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.diagnostic-clear-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.diagnostic-cancel-btn {
+  background: none;
+  color: #64748b;
+  border: none;
+  font-size: 12px;
+  padding: 7px 10px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.diagnostic-cancel-btn:hover {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+/* Framework Selector Grid */
+.framework-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.framework-pill {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.framework-pill:hover {
+  border-color: #3b82f6;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.framework-pill.pill-active {
+  background: #2563eb;
+  border-color: #1d4ed8;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+.framework-detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.framework-detail-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.version-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.version-input {
+  width: 90px !important;
+}
+
+.version-quick-chip {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #475569;
+}
+
+.version-quick-chip:hover {
+  background: #e2e8f0;
+}
+
+.version-quick-chip.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.diagnostic-text-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: #0f172a;
+}
+
+.diagnostic-select-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.custom-framework-field {
+  margin-top: 4px;
+}
+
+/* Code Snippet Meta Row */
+.code-meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.code-meta-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Restart Confirmation Dialog */
+.restart-confirm-dialog {
+  background: #fff1f2;
+  border: 1.5px solid #fecdd3;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeInPanel 0.2s ease-out;
+}
+
+.restart-dialog-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.restart-dialog-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.restart-dialog-text strong {
+  display: block;
+  font-size: 13px;
+  color: #9f1239;
+  margin-bottom: 2px;
+}
+
+.restart-dialog-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #881337;
+  line-height: 1.4;
+}
+
+.restart-dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 30px;
+}
+
+.restart-dialog-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.restart-dialog-btn.confirm-btn {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.restart-dialog-btn.confirm-btn:hover {
+  background: #be123c;
+}
+
+.restart-dialog-btn.cancel-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+.restart-dialog-btn.cancel-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Rich Diagnostic Solution Enhancements */
+.confidence-pill {
+  font-size: 11px;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.assumptions-card {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+}
+
+.assumptions-header {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 6px;
+}
+
+.assumptions-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.45;
+}
+
+.commands-block {
+  margin-top: 10px;
+}
+
+.commands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.command-terminal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0f172a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+.command-code {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  color: #38bdf8;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.copy-cmd-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.copy-cmd-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.verification-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.verification-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.vstep-check {
+  color: #16a34a;
+  font-weight: 900;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.alternative-causes-block {
+  margin-top: 10px;
+}
+
+.alternative-causes-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.missing-info-card {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+}
+
+.missing-info-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0369a1;
+  margin-bottom: 4px;
+}
+
+.missing-info-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #0c4a6e;
+  line-height: 1.4;
+}

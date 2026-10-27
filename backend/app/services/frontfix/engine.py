@@ -497,6 +497,10 @@ class DiagnosticEngine:
             evidence.get("stack")
             or evidence.get("fileLocation")
             or evidence.get("errorSignature")
+            or evidence.get("errorMessage")
+            or evidence.get("codeSnippet")
+            or ctx.get("errorMessage")
+            or ctx.get("codeSnippet")
             or len(clean_text.split("\n")) > 2
             or any(kw in clean_text.lower() for kw in [
                 "502 bad gateway", "econnrefused", "typeerror:", "referenceerror:", "syntaxerror:",
@@ -568,6 +572,9 @@ class DiagnosticEngine:
                     "is_browser_captured": evidence.get("isBrowserCaptured"),
                     "file_location": evidence.get("fileLocation"),
                     "detected_framework": evidence.get("detectedFramework"),
+                    "detectedFramework": evidence.get("detectedFramework"),
+                    "framework_version": evidence.get("frameworkVersion"),
+                    "build_tool": evidence.get("buildTool"),
                     "confirmed_observations": evidence.get("observations"),
                 },
             }
@@ -720,6 +727,9 @@ class DiagnosticEngine:
                     "is_browser_captured": evidence.get("isBrowserCaptured"),
                     "file_location": evidence.get("fileLocation"),
                     "detected_framework": evidence.get("detectedFramework"),
+                    "detectedFramework": evidence.get("detectedFramework"),
+                    "framework_version": evidence.get("frameworkVersion"),
+                    "build_tool": evidence.get("buildTool"),
                     "confirmed_observations": evidence.get("observations"),
                 },
             }
@@ -738,6 +748,11 @@ class DiagnosticEngine:
                     sanitized_history,
                     evidence,
                     target_language=active_lang,
+                    action=action,
+                    code_snippet=ctx.get("codeSnippet") or evidence.get("codeSnippet"),
+                    filename=ctx.get("filename") or evidence.get("filename"),
+                    build_tool=ctx.get("buildTool") or evidence.get("buildTool"),
+                    error_message=ctx.get("errorMessage") or evidence.get("errorMessage"),
                 )
                 if llm_diag and llm_diag.get("problem") and llm_diag.get("fix_steps"):
                     provider_name = str(llm_diag.get("provider", "ai")).capitalize()
@@ -757,16 +772,22 @@ class DiagnosticEngine:
                         "is_followup_needed": False,
                         "is_uncertain": False,
                         "confidence_score": 0.95,
-                        "confidence_level": "medium",
+                        "confidence_level": llm_diag.get("confidence_level", "medium"),
                         "category": llm_diag.get("category", "Frontend Error Diagnosis"),
                         "title": llm_diag.get("title", f"Diagnosis: {first_line[:60]}"),
                         "problem": llm_diag.get("problem"),
                         "likely_cause": f"Based on error analysis: {llm_diag.get('likely_cause')}",
+                        "why_it_occurs": llm_diag.get("why_it_occurs"),
                         "fix_steps": llm_diag.get("fix_steps"),
                         "file_hint": file_hint,
                         "code_before": llm_diag.get("code_before", "// Offending code snippet"),
                         "code_after": llm_diag.get("code_after", "// Recommended fix"),
                         "corrected_code": llm_diag.get("code_after", "// Recommended fix"),
+                        "commands": llm_diag.get("commands", []),
+                        "verification_steps": llm_diag.get("verification_steps", []),
+                        "alternative_causes": llm_diag.get("alternative_causes", []),
+                        "assumptions": llm_diag.get("assumptions", []),
+                        "missing_information": llm_diag.get("missing_information", []),
                         "code_context_note": "Tailored real-time solution generated for your frontend error.",
                         "extra_tips": llm_diag.get("extra_tips", "Inspect browser console and network headers."),
                         "follow_up_question": None,
@@ -787,6 +808,9 @@ class DiagnosticEngine:
                             "is_browser_captured": evidence.get("isBrowserCaptured"),
                             "file_location": evidence.get("fileLocation"),
                             "detected_framework": evidence.get("detectedFramework"),
+                            "detectedFramework": evidence.get("detectedFramework"),
+                            "framework_version": evidence.get("frameworkVersion"),
+                            "build_tool": evidence.get("buildTool"),
                             "confirmed_observations": evidence.get("observations"),
                         },
                     }
@@ -857,6 +881,9 @@ class DiagnosticEngine:
                 "is_browser_captured": evidence.get("isBrowserCaptured"),
                 "file_location": evidence.get("fileLocation"),
                 "detected_framework": evidence.get("detectedFramework"),
+                "detectedFramework": evidence.get("detectedFramework"),
+                "framework_version": evidence.get("frameworkVersion"),
+                "build_tool": evidence.get("buildTool"),
                 "confirmed_observations": evidence.get("observations"),
             },
         }

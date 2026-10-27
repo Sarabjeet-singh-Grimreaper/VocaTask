@@ -13,6 +13,15 @@ export default function ChatStream({
   onVerifySolution,
   onGoBack,
   onRestart,
+  diagnosticState,
+  onUpdateDiagnosticState,
+  onSetActiveQuestion,
+  onSubmitDiagnosticQuestion,
+  restartConfirming,
+  onRequestRestart,
+  onCancelRestart,
+  onConfirmRestart,
+  isSending,
 }) {
   const endRef = useRef(null);
 
@@ -39,6 +48,15 @@ export default function ChatStream({
             onVerifySolution={onVerifySolution}
             onGoBack={onGoBack}
             onRestart={onRestart}
+            diagnosticState={diagnosticState}
+            onUpdateDiagnosticState={onUpdateDiagnosticState}
+            onSetActiveQuestion={onSetActiveQuestion}
+            onSubmitDiagnosticQuestion={onSubmitDiagnosticQuestion}
+            restartConfirming={restartConfirming}
+            onRequestRestart={onRequestRestart}
+            onCancelRestart={onCancelRestart}
+            onConfirmRestart={onConfirmRestart}
+            isSending={isSending}
           />
         );
       })}

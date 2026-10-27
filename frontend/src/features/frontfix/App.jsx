@@ -138,7 +138,16 @@ export default function FrontFixApp({ onClose, isDrawer = false, initialError = 
                 onSkipQuestions={chat.skipQuestions}
                 onVerifySolution={chat.verifySolution}
                 onGoBack={chat.goBack}
-                onRestart={chat.restartDiagnosis}
+                onRestart={chat.requestRestart}
+                diagnosticState={chat.diagnosticState}
+                onUpdateDiagnosticState={chat.updateDiagnosticState}
+                onSetActiveQuestion={chat.setActiveQuestion}
+                onSubmitDiagnosticQuestion={chat.submitDiagnosticQuestion}
+                restartConfirming={chat.restartConfirming}
+                onRequestRestart={chat.requestRestart}
+                onCancelRestart={chat.cancelRestart}
+                onConfirmRestart={chat.confirmRestart}
+                isSending={chat.sending}
               />
             ) : (
               <HeroView
